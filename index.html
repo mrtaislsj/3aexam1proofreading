@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Old School RuneScape: Proofreading Quest</title>
+
+  <style>
+    @font-face {
+      font-family: 'RuneScape-Plain-12';
+      src: url('RuneScape-Plain-12.tff') format('truetype'),
+           url('RuneScape-Plain-12.ttf') format('truetype'),
+           url('https://fonts.cdnfonts.com/s/14878/RuneScape-Plain-12.woff') format('woff'),
+           local('RuneScape-Plain-12');
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      image-rendering: pixelated;
+    }
+
+    body {
+      font-family: 'RuneScape-Plain-12', monospace, sans-serif;
+      background-color: #0b0907;
+      background-image: 
+        radial-gradient(#261d15 15%, transparent 16%), 
+        radial-gradient(#17120c 15%, transparent 16%);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+      margin: 0;
+      padding: 16px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ffff00;
+      text-shadow: 2px 2px 0px #000000;
+    }
+
+    /* Wide-Screen OSRS Beveled Stone Frame */
+    .rs-frame {
+      background: #493f35;
+      width: 100%;
+      max-width: 920px;
+      border: 5px solid #2b2219;
+      box-shadow: 
+        inset 3px 3px 0px #6d5e4f,
+        inset -3px -3px 0px #221a13,
+        0 0 0 4px #534537,
+        0 16px 36px rgba(0, 0, 0, 0.9);
+      border-radius: 6px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .status-hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+      background: #2e261f;
+      padding: 10px 16px;
+      border: 2px solid #1a1511;
+      border-right-color: #534537;
+      border-bottom-color: #534537;
+    }
+
+    .player-tag { color: #00ff00; font-size: 1.25rem; }
+    .quest-tag { color: #ff981f; font-size: 1.15rem; }
+    .xp-tag { color: #00ffff; font-size: 1.25rem; }
+    .pot-xp-tag { color: #facc15; font-size: 1.15rem; }
+
+    .pixel-viewport {
+      width: 100%;
+      height: 180px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      border: 3px solid #231b14;
+      box-shadow: inset 0 0 14px #000000;
+      background: #14100b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pixel-viewport svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .dialogue-box {
+      background: #382e24;
+      border: 2px solid #231b14;
+      border-right-color: #554434;
+      border-bottom-color: #554434;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      font-size: 1.35rem;
+      color: #ffffff;
+      line-height: 1.45;
+      text-align: center;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-shadow: 2px 2px 0px #000000;
+    }
+
+    /* Interactive Sentence Token Area */
+    .sentence-arena {
+      background: #231c15;
+      border: 3px solid #1a1511;
+      border-right-color: #534537;
+      border-bottom-color: #534537;
+      border-radius: 6px;
+      padding: 22px 18px;
+      min-height: 110px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 10px 12px;
+      margin-bottom: 14px;
+    }
+
+    .word-token {
+      font-family: inherit;
+      background: #504437;
+      border: 3px solid #73614e;
+      border-right-color: #231a12;
+      border-bottom-color: #231a12;
+      border-radius: 4px;
+      padding: 8px 14px;
+      font-size: 1.35rem;
+      color: #fffe9e;
+      cursor: pointer;
+      text-shadow: 2px 2px 0px #000000;
+      user-select: none;
+      transition: background-color 0.1s ease, transform 0.1s ease;
+    }
+
+    .word-token:hover:not(.resolved) {
+      background: #5c4f40;
+      color: #ffffff;
+    }
+
+    .word-token:active:not(.resolved) {
+      transform: translateY(1px);
+    }
+
+    /* Incorrect tap shake */
+    .word-token.shake {
+      animation: rsShake 0.35s ease;
+      background-color: #b91c1c !important;
+      border-color: #ef4444 #7f1d1d #7f1d1d #ef4444 !important;
+      color: #ffffff !important;
+    }
+
+    @keyframes rsShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    /* Target error selected */
+    .word-token.target-active {
+      background-color: #facc15 !important;
+      border-color: #fef08a #854d0e #854d0e #fef08a !important;
+      color: #000000 !important;
+      text-shadow: none;
+    }
+
+    /* Resolved correct word */
+    .word-token.resolved {
+      background-color: #15803d !important;
+      border-color: #22c55e #14532d #14532d #22c55e !important;
+      color: #86efac !important;
+      text-decoration: underline;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* OSRS Multiple Choice Modal */
+    .modal-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(11, 9, 7, 0.88);
+      border-radius: 6px;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      z-index: 50;
+    }
+
+    .modal-stone {
+      background: #3e342b;
+      width: 100%;
+      max-width: 650px;
+      border: 4px solid #231b14;
+      box-shadow: 
+        inset 2px 2px 0px #6d5e4f, 
+        inset -2px -2px 0px #1a1511,
+        0 12px 28px rgba(0, 0, 0, 0.9);
+      border-radius: 4px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .modal-heading {
+      color: #ffff00;
+      font-size: 1.35rem;
+      margin-bottom: 8px;
+    }
+
+    /* Sentence preview box with highlighted mistake */
+    .modal-sentence-preview {
+      background: #231c15;
+      border: 3px solid #1a1511;
+      border-right-color: #534537;
+      border-bottom-color: #534537;
+      border-radius: 4px;
+      padding: 14px 16px;
+      margin: 10px 0 14px 0;
+      font-size: 1.35rem;
+      line-height: 1.6;
+      color: #ffffff;
+      text-shadow: 2px 2px 0px #000000;
+    }
+
+    .modal-highlight-word {
+      background-color: #b91c1c;
+      border: 2px solid #ef4444;
+      color: #ffff00;
+      padding: 2px 8px;
+      border-radius: 3px;
+      text-decoration: underline;
+      display: inline-block;
+      animation: rsGlow 1s infinite alternate;
+    }
+
+    @keyframes rsGlow {
+      from { box-shadow: 0 0 4px #dc2626; }
+      to { box-shadow: 0 0 12px #f87171; }
+    }
+
+    .modal-sub {
+      color: #ff981f;
+      font-size: 1.2rem;
+      margin-bottom: 14px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .rs-option-btn {
+      font-family: inherit;
+      background: #504437;
+      border: 3px solid #73614e;
+      border-right-color: #231a12;
+      border-bottom-color: #231a12;
+      border-radius: 4px;
+      padding: 14px 10px;
+      font-size: 1.25rem;
+      color: #fffe9e;
+      cursor: pointer;
+      text-align: center;
+      text-shadow: 2px 2px 0px #000000;
+      transition: background-color 0.1s ease;
+    }
+
+    .rs-option-btn:hover:not([disabled]) {
+      background: #5c4f40;
+      color: #ffffff;
+    }
+
+    .rs-option-btn:active:not([disabled]) {
+      border-top-color: #231a12;
+      border-left-color: #231a12;
+      border-right-color: #73614e;
+      border-bottom-color: #73614e;
+      transform: translateY(1px);
+    }
+
+    .rs-option-btn.correct {
+      background-color: #15803d !important;
+      border-color: #22c55e #14532d #14532d #22c55e !important;
+      color: #ffffff !important;
+    }
+
+    .rs-option-btn.wrong {
+      background-color: #b91c1c !important;
+      border-color: #ef4444 #7f1d1d #7f1d1d #ef4444 !important;
+      color: #ffffff !important;
+    }
+
+    /* Level Up Banner */
+    .level-up-banner {
+      display: none;
+      background: #2b2219;
+      border: 3px double #facc15;
+      padding: 12px;
+      margin-top: 14px;
+      text-align: center;
+      animation: pulseBanner 1s infinite alternate;
+    }
+
+    @keyframes pulseBanner {
+      from { box-shadow: 0 0 6px #ca8a04; }
+      to { box-shadow: 0 0 16px #fde047; }
+    }
+
+    .level-up-title {
+      font-size: 1.3rem;
+      color: #ff0000;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .level-up-msg {
+      font-size: 1.3rem;
+      background: #fed7aa;
+      color: #451a03;
+      padding: 4px 12px;
+      border-radius: 2px;
+      display: inline-block;
+      text-shadow: none;
+      font-weight: bold;
+    }
+
+    .level-up-note {
+      color: #00ffff;
+      font-size: 1.15rem;
+      margin-top: 8px;
+      line-height: 1.4;
+      text-shadow: 2px 2px #000;
+    }
+
+    .action-btn {
+      font-family: inherit;
+      margin-top: 16px;
+      width: 100%;
+      padding: 16px;
+      font-size: 1.35rem;
+      color: #ffffff;
+      background: #8b2500;
+      border: 3px solid #b23a0d;
+      border-top-color: #b23a0d;
+      border-left-color: #b23a0d;
+      border-right-color: #4a1200;
+      border-bottom-color: #4a1200;
+      border-radius: 4px;
+      cursor: pointer;
+      text-shadow: 2px 2px 0px #000;
+    }
+
+    .action-btn:active {
+      border-top-color: #4a1200;
+      border-left-color: #4a1200;
+      border-right-color: #b23a0d;
+      border-bottom-color: #b23a0d;
+    }
+
+    .blank-input {
+      font-family: inherit;
+      background: #2e261f;
+      border: 3px solid #1a1511;
+      border-right-color: #534537;
+      border-bottom-color: #534537;
+      color: #ffff00;
+      padding: 14px 20px;
+      font-size: 1.4rem;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      outline: none;
+      text-shadow: 2px 2px 0px #000;
+      border-radius: 4px;
+    }
+
+    .screen-panel {
+      display: none;
+    }
+
+    .screen-panel.active {
+      display: block;
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    @media (max-width: 640px) {
+      .options-grid { grid-template-columns: 1fr; }
+      .pixel-viewport { height: 150px; }
+      .dialogue-box { font-size: 1.15rem; }
+      .modal-sentence-preview { font-size: 1.15rem; }
+      .word-token { font-size: 1.2rem; padding: 7px 11px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Audio Elements supporting both MP3 and MID -->
+  <audio id="audio-adventure" loop preload="auto">
+    <source src="adventure.mp3" type="audio/mpeg">
+    <source src="adventure.mid" type="audio/midi">
+  </audio>
+  <audio id="audio-questcomplete" preload="auto">
+    <source src="runescape-questcomplete.mp3" type="audio/mpeg">
+    <source src="runescape-questcomplete.mid" type="audio/midi">
+  </audio>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="rs-frame">
+
+    <!-- SCREEN 1: LOGIN -->
+    <div id="start-panel" class="screen-panel active" style="text-align: center; padding: 25px 12px;">
+      <div style="font-size: 2.3rem; color: #ffff00; margin-bottom: 8px;">⚔️ THE TRIAL OF PROOFREADING ⚔️</div>
+      <p style="color: #ff981f; font-size: 1.35rem; margin-bottom: 12px;">Master verbs, prepositions, conjunctions, and questions across Gielinor.</p>
+      <p style="color: #ffffff; font-size: 1.25rem;">Enter your English name to begin your trial:</p>
+      
+      <input type="text" id="player-input" class="blank-input" style="max-width: 360px; margin: 18px 0 24px 0;" placeholder="Type your name..." maxlength="18" />
+      <br />
+      <button class="action-btn" style="max-width: 380px;" onclick="startGame()">Begin Quest ➜</button>
+    </div>
+
+    <!-- SCREEN 2: GAMEPLAY -->
+    <div id="gameplay-panel" class="screen-panel">
+      <div class="status-hud">
+        <span class="player-tag" id="hud-player-name">Player: Adventurer</span>
+        <span class="quest-tag" id="hud-quest-title">Trial 1 / 20</span>
+        <span class="pot-xp-tag" id="hud-potential-xp">Value: 100 XP</span>
+        <span class="xp-tag" id="hud-xp-score">XP: 0 / 2000</span>
+      </div>
+
+      <div class="pixel-viewport" id="viewport-graphic"></div>
+
+      <div class="dialogue-box" id="quest-prompt">Tap on the ONE mistake in the sentence:</div>
+
+      <!-- Word Tokens Arena -->
+      <div class="sentence-arena" id="sentence-box"></div>
+
+      <!-- Level Up Notification -->
+      <div class="level-up-banner" id="level-up-box">
+        <div class="level-up-title">★ LEVEL UP! ★</div>
+        <div class="level-up-msg" id="level-up-xp-msg">Congratulations! You have levelled up!</div>
+        <div class="level-up-note" id="level-up-note-text"></div>
+      </div>
+
+      <button class="action-btn" id="continue-btn" style="display: none;" onclick="nextStep()">Click here to continue ➜</button>
+    </div>
+
+    <!-- 4-CHOICE CORRECTION MODAL WITH HIGHLIGHTED SENTENCE -->
+    <div class="modal-backdrop" id="choice-modal">
+      <div class="modal-stone">
+        <div class="modal-heading">★ MISTAKE SPOTTED! ★</div>
+        
+        <!-- Full sentence preview with error highlighted -->
+        <div class="modal-sentence-preview" id="modal-sentence-preview"></div>
+
+        <div class="modal-sub">Choose the correct replacement for "<span id="modal-error-word" style="color: #ffff00;"></span>":</div>
+        <div class="options-grid" id="modal-options-grid"></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: RESULTS -->
+    <div id="result-panel" class="screen-panel" style="text-align: center; padding: 30px 14px;">
+      <div style="font-size: 3rem; margin-bottom: 8px;">🏆 QUEST COMPLETE! 🏆</div>
+      <p style="color: #ff981f; font-size: 1.4rem;" id="hero-congrats"></p>
+      <div style="font-size: 2.6rem; color: #ffff00; margin: 20px 0;" id="final-xp-slot">0 / 2000 XP</div>
+      <p id="final-evaluation" style="font-size: 1.35rem; color: #00ffff; margin-bottom: 24px;"></p>
+      <button class="action-btn" style="max-width: 380px;" onclick="resetQuest()">Play Again 🔄</button>
+    </div>
+
+  </div>
+
+  <script>
+    let hero = "Adventurer";
+    let stepIndex = 0;
+    let earnedXP = 0;
+    let mistakesThisQuestion = 0;
+    const MAX_XP_PER_Q = 100;
+    const TOTAL_POSSIBLE_XP = 2000;
+
+    const bgmAudio = document.getElementById("audio-adventure");
+    const questCompleteAudio = document.getElementById("audio-questcomplete");
+    
+    bgmAudio.volume = 0.22;
+    questCompleteAudio.volume = 0.55;
+
+    let audioCtx = null;
+    let bgmLoopTimer = null;
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(freq, type, duration, delay = 0, vol = 0.15) {
+      if (!audioCtx) return;
+      setTimeout(() => {
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {}
+      }, delay * 1000);
+    }
+
+    function startSynthBGM() {
+      if (bgmLoopTimer) clearInterval(bgmLoopTimer);
+      const notes = [
+        { f: 293.66, d: 0.35, t: 0.0 },
+        { f: 329.63, d: 0.35, t: 0.4 },
+        { f: 369.99, d: 0.50, t: 0.8 },
+        { f: 440.00, d: 0.50, t: 1.4 },
+        { f: 369.99, d: 0.35, t: 2.0 },
+        { f: 329.63, d: 0.70, t: 2.4 },
+        { f: 293.66, d: 0.35, t: 3.2 },
+        { f: 369.99, d: 0.35, t: 3.6 },
+        { f: 440.00, d: 0.70, t: 4.0 },
+        { f: 392.00, d: 0.35, t: 4.8 },
+        { f: 369.99, d: 0.35, t: 5.2 },
+        { f: 293.66, d: 0.90, t: 5.6 }
+      ];
+
+      function playMeasure() {
+        notes.forEach(n => playTone(n.f, 'triangle', n.d, n.t, 0.09));
+      }
+
+      playMeasure();
+      bgmLoopTimer = setInterval(playMeasure, 6800);
+    }
+
+    function stopSynthBGM() {
+      if (bgmLoopTimer) {
+        clearInterval(bgmLoopTimer);
+        bgmLoopTimer = null;
+      }
+    }
+
+    function playFanfare() {
+      const fanfareNotes = [
+        { f: 261.63, d: 0.25, t: 0.0 },
+        { f: 329.63, d: 0.25, t: 0.2 },
+        { f: 392.00, d: 0.30, t: 0.4 },
+        { f: 523.25, d: 0.80, t: 0.7 },
+        { f: 440.00, d: 0.25, t: 1.5 },
+        { f: 523.25, d: 1.20, t: 1.8 }
+      ];
+      fanfareNotes.forEach(n => playTone(n.f, 'square', n.d, n.t, 0.18));
+    }
+
+    function getCurrentPotentialXP() {
+      return Math.max(25, MAX_XP_PER_Q - (mistakesThisQuestion * 25));
+    }
+
+    function updatePotentialXPDisplay() {
+      const currentVal = getCurrentPotentialXP();
+      const el = document.getElementById("hud-potential-xp");
+      if (el) {
+        el.textContent = `Value: ${currentVal} XP`;
+        if (currentVal === 100) {
+          el.style.color = "#facc15";
+        } else if (currentVal >= 50) {
+          el.style.color = "#fb923c";
+        } else {
+          el.style.color = "#f87171";
+        }
+      }
+    }
+
+    // 20 Proofreading Questions Data
+    const proofreadData = [
+      {
+        tokens: ["Allen", "wants", "to", "buys", "a", "card", "at", "the", "gift", "shop."],
+        errorIndex: 3,
+        options: ["A. buy", "B. buying", "C. bought", "D. is buy"],
+        correctIndex: 0,
+        fixedWord: "buy",
+        note: "Note: Use the base form of the verb after want to (want to buy)."
+      },
+      {
+        tokens: ["Lucus", "want", "to", "watch", "a", "film", "at", "the", "cinema."],
+        errorIndex: 1,
+        options: ["A. wanting", "B. wants", "C. is want", "D. are want"],
+        correctIndex: 1,
+        fixedWord: "wants",
+        note: "Note: Use wants for third-person singular subjects (he / Ricky)."
+      },
+      {
+        tokens: ["Lucas", "and", "Marco", "wants", "to", "go", "to", "the", "cafe", "for", "afternoon", "tea."],
+        errorIndex: 3,
+        options: ["A. want", "B. wanting", "C. is want", "D. are wants"],
+        correctIndex: 0,
+        fixedWord: "want",
+        note: "Note: Plural pronouns like they take the base form want (They want to go)."
+      },
+      {
+        tokens: ['"What', "do", "you", "want", "to", 'go?"', "—", '"I', "want", "to", "go", "to", "the", "book", 'shop."'],
+        errorIndex: 0,
+        displayError: "What",
+        options: ["A. When", "B. Where", "C. Why", "D. Who"],
+        correctIndex: 1,
+        fixedWord: '"Where',
+        note: "Note: Use the question word Where when asking about a place (Where do you want to go?)."
+      },
+      {
+        tokens: ['"Where', "do", "you", "want", "to", "do", "at", "the", 'restaurant?"', "—", '"I', "want", "to", "eat", "dim", 'sum."'],
+        errorIndex: 0,
+        displayError: "Where",
+        options: ["A. What", "B. Why", "C. Who", "D. When"],
+        correctIndex: 0,
+        fixedWord: '"What',
+        note: "Note: Use What when asking about an action or activity (What do you want to do?)."
+      },
+      {
+        tokens: ['"Where', "do", "you", "want", "to", "buy", "a", 'card?"', "—", '"Because', "it", "is", "Suey's", 'birthday."'],
+        errorIndex: 0,
+        displayError: "Where",
+        options: ["A. What", "B. Why", "C. Who", "D. How"],
+        correctIndex: 1,
+        fixedWord: '"Why',
+        note: "Note: When the answer gives a reason starting with Because, the question begins with Why."
+      },
+      {
+        tokens: ["I", "want", "to", "go", "at", "the", "sweet", "shop", "to", "buy", "some", "chocolate."],
+        errorIndex: 4,
+        options: ["A. on", "B. in", "C. to", "D. for"],
+        correctIndex: 2,
+        fixedWord: "to",
+        note: "Note: The correct phrase for direction is go to the [place]."
+      },
+      {
+        tokens: ["Stella", "wants", "drink", "some", "water", "because", "he", "is", "thirsty."],
+        errorIndex: 2,
+        options: ["A. to drink", "B. drinks", "C. drinking", "D. drank"],
+        correctIndex: 0,
+        fixedWord: "to drink",
+        note: "Note: The structure is want + to + base verb (wants to drink)."
+      },
+      {
+        tokens: ["We", "want", "to", "go", "to", "the", "hotel", "to", "has", "a", "buffet", "lunch."],
+        errorIndex: 8,
+        options: ["A. have", "B. having", "C. had", "D. haves"],
+        correctIndex: 0,
+        fixedWord: "have",
+        note: "Note: An infinitive verb following to stays in its base form (have)."
+      },
+      {
+        tokens: ["Let's", "go", "to", "the", "cinema", "to", "look", "a", "film."],
+        errorIndex: 6,
+        options: ["A. see", "B. watch", "C. listen", "D. read"],
+        correctIndex: 1,
+        fixedWord: "watch",
+        note: "Note: The standard collocation is to watch a film."
+      },
+      {
+        tokens: ["Dylan", "can", "play", "violin", "and", "the", "piano."],
+        errorIndex: 3,
+        options: ["A. a violin", "B. the violin", "C. an violin", "D. violins"],
+        correctIndex: 1,
+        fixedWord: "the violin",
+        note: "Note: Musical instruments require the definite article the after play (play the violin)."
+      },
+      {
+        tokens: ["Justin", "can", "play", "the table tennis", "with", "his", "classmates."],
+        errorIndex: 3,
+        options: ["A. table tennis", "B. a table tennis", "C. an table tennis", "D. the table tennises"],
+        correctIndex: 0,
+        fixedWord: "table tennis",
+        note: "Note: Do not use the before sports or games (play table tennis)."
+      },
+      {
+        tokens: ["I", "can", "play", "basketball", "or", "table", "tennis."],
+        errorIndex: 4,
+        options: ["A. but", "B. and", "C. so", "D. because"],
+        correctIndex: 1,
+        fixedWord: "and",
+        note: "Note: Use and to join two things you can do (can ... and ...)."
+      },
+      {
+        tokens: ["I", "can't", "play", "the", "guitar", "and", "the", "violin."],
+        errorIndex: 5,
+        options: ["A. but", "B. or", "C. so", "D. with"],
+        correctIndex: 1,
+        fixedWord: "or",
+        note: "Note: In negative sentences, use or to connect two things you cannot do (can't ... or ...)."
+      },
+      {
+        tokens: ["I", "can't", "play", "football", "and", "I", "can", "play", "basketball."],
+        errorIndex: 4,
+        options: ["A. or", "B. but", "C. so", "D. because"],
+        correctIndex: 1,
+        fixedWord: "but",
+        note: "Note: Use but to link two contrasting clauses (can't ... but can ...)."
+      },
+      {
+        tokens: ["Felix", "is", "good", "in", "music."],
+        errorIndex: 3,
+        options: ["A. on", "B. at", "C. with", "D. for"],
+        correctIndex: 1,
+        fixedWord: "at",
+        note: "Note: The fixed prepositional phrase is (not) good at."
+      },
+      {
+        tokens: ["Jerry", "is", "good", "with", "sports", "because", "he", "runs", "very", "fast."],
+        errorIndex: 3,
+        options: ["A. at", "B. on", "C. in", "D. of"],
+        correctIndex: 0,
+        fixedWord: "at",
+        note: "Note: Use good at sports."
+      },
+      {
+        tokens: ['"Can', "you", "play", 'badminton?"', "—", '"No,', "I", 'can."'],
+        errorIndex: 7,
+        displayError: "can.",
+        options: ["A. can't", "B. don't", "C. am not", "D. not can"],
+        correctIndex: 0,
+        fixedWord: 'can\'t."',
+        note: "Note: A negative short answer to Can you...? is No, I can't."
+      },
+      {
+        tokens: ['"Can', "you", "play", "the", 'piano?"', "—", '"Yes,', "I", 'can\'t."'],
+        errorIndex: 8,
+        displayError: "can't.",
+        options: ["A. can", "B. do", "C. am", "D. could"],
+        correctIndex: 0,
+        fixedWord: 'can."',
+        note: "Note: An affirmative short answer to Can you...? is Yes, I can."
+      },
+      {
+        tokens: ["I", "want", "to", "go", "to", "the", "sportswear", "shop", "to", "buy", "new", "trainer."],
+        errorIndex: 11,
+        displayError: "trainer",
+        options: ["A. trainers", "B. a trainers", "C. training", "D. a trainer"],
+        correctIndex: 0,
+        fixedWord: "trainers.",
+        note: "Note: Footwear like sports shoes is referred to in the plural form: trainers (or a pair of trainers)."
+      }
+    ];
+
+    const scribeGraphicSVG = `
+      <svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="180" fill="#14100b"/>
+        <rect y="130" width="400" height="50" fill="#2d2218"/>
+        <rect x="30" y="115" width="340" height="40" fill="#543822" stroke="#1f140c" stroke-width="4"/>
+        <rect x="70" y="45" width="260" height="75" rx="4" fill="#fed7aa" stroke="#78350f" stroke-width="4"/>
+        <rect x="62" y="40" width="16" height="85" rx="4" fill="#d97706" stroke="#451a03" stroke-width="3"/>
+        <rect x="322" y="40" width="16" height="85" rx="4" fill="#d97706" stroke="#451a03" stroke-width="3"/>
+        <line x1="95" y1="62" x2="305" y2="62" stroke="#92400e" stroke-width="3" stroke-dasharray="14,8"/>
+        <line x1="95" y1="78" x2="305" y2="78" stroke="#92400e" stroke-width="3" stroke-dasharray="18,10"/>
+        <line x1="95" y1="94" x2="260" y2="94" stroke="#92400e" stroke-width="3" stroke-dasharray="12,8"/>
+        <rect x="285" y="90" width="24" height="25" fill="#1e293b" stroke="#000" stroke-width="2"/>
+        <ellipse cx="297" cy="90" rx="9" ry="4" fill="#0f172a"/>
+        <path d="M297 90 Q 320 60 325 35 Q 315 50 297 90" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+        <circle cx="160" cy="78" r="24" fill="#38bdf8" fill-opacity="0.35" stroke="#facc15" stroke-width="4"/>
+        <line x1="177" y1="95" x2="198" y2="116" stroke="#854d0e" stroke-width="6" stroke-linecap="round"/>
+        <text x="200" y="160" font-family="'RuneScape-Plain-12', monospace" font-size="12" fill="#facc15" text-anchor="middle">EXAMINE THE SCROLL CAREFULLY</text>
+      </svg>
+    `;
+
+    function startGame() {
+      const nameVal = document.getElementById("player-input").value.trim();
+      hero = nameVal !== "" ? nameVal : "Adventurer";
+
+      document.getElementById("hud-player-name").textContent = `Player: ${hero}`;
+      switchScreen("gameplay-panel");
+      
+      initAudioContext();
+
+      bgmAudio.currentTime = 0;
+      const playPromise = bgmAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          startSynthBGM();
+        });
+      }
+
+      renderStage();
+    }
+
+    document.getElementById("player-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") startGame();
+    });
+
+    function switchScreen(id) {
+      document.querySelectorAll(".screen-panel").forEach(p => p.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    let activeTokenElement = null;
+
+    function renderStage() {
+      const q = proofreadData[stepIndex];
+      mistakesThisQuestion = 0;
+
+      document.getElementById("hud-quest-title").textContent = `Trial ${stepIndex + 1} / ${proofreadData.length}`;
+      document.getElementById("hud-xp-score").textContent = `XP: ${earnedXP} / ${TOTAL_POSSIBLE_XP}`;
+      updatePotentialXPDisplay();
+
+      document.getElementById("viewport-graphic").innerHTML = scribeGraphicSVG;
+      document.getElementById("quest-prompt").textContent = "Tap on the ONE mistake in the sentence:";
+      document.getElementById("level-up-box").style.display = "none";
+      document.getElementById("continue-btn").style.display = "none";
+
+      const arena = document.getElementById("sentence-box");
+      arena.innerHTML = "";
+
+      q.tokens.forEach((token, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "word-token";
+        btn.textContent = token;
+        btn.onclick = () => handleTokenTap(idx, btn);
+        arena.appendChild(btn);
+      });
+    }
+
+    function handleTokenTap(tappedIdx, element) {
+      const q = proofreadData[stepIndex];
+
+      if (tappedIdx === q.errorIndex) {
+        activeTokenElement = element;
+        element.classList.add("target-active");
+        const displayWord = q.displayError || q.tokens[tappedIdx];
+        openCorrectionModal(displayWord, q.options);
+      } else {
+        mistakesThisQuestion++;
+        updatePotentialXPDisplay();
+
+        element.classList.remove("shake");
+        void element.offsetWidth;
+        element.classList.add("shake");
+        document.getElementById("quest-prompt").textContent = `"${element.textContent}" is correct! Try again (-25 XP penalty).`;
+
+        playTone(220.00, 'sawtooth', 0.15, 0.0, 0.12);
+
+        setTimeout(() => {
+          element.classList.remove("shake");
+        }, 400);
+      }
+    }
+
+    function openCorrectionModal(errorText, options) {
+      const q = proofreadData[stepIndex];
+
+      const previewContainer = document.getElementById("modal-sentence-preview");
+      previewContainer.innerHTML = q.tokens.map((token, idx) => {
+        if (idx === q.errorIndex) {
+          return `<span class="modal-highlight-word">${token}</span>`;
+        }
+        return `<span>${token}</span>`;
+      }).join(" ");
+
+      document.getElementById("modal-error-word").textContent = errorText;
+      const grid = document.getElementById("modal-options-grid");
+      grid.innerHTML = "";
+
+      options.forEach((opt, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "rs-option-btn";
+        btn.textContent = opt;
+        btn.onclick = () => handleModalChoice(idx, btn);
+        grid.appendChild(btn);
+      });
+
+      document.getElementById("choice-modal").style.display = "flex";
+    }
+
+    function handleModalChoice(chosenIdx, buttonEl) {
+      const q = proofreadData[stepIndex];
+      const buttons = document.querySelectorAll("#modal-options-grid .rs-option-btn");
+
+      if (chosenIdx === q.correctIndex) {
+        buttonEl.classList.add("correct");
+        buttons.forEach(b => b.disabled = true);
+
+        const awardedXP = getCurrentPotentialXP();
+
+        setTimeout(() => {
+          document.getElementById("choice-modal").style.display = "none";
+          
+          if (activeTokenElement) {
+            activeTokenElement.classList.remove("target-active");
+            activeTokenElement.classList.add("resolved");
+            activeTokenElement.textContent = q.fixedWord;
+          }
+
+          document.getElementById("quest-prompt").textContent = `Mistake corrected! Earned +${awardedXP} XP!`;
+          document.getElementById("level-up-xp-msg").textContent = `Congratulations! You levelled up! (+${awardedXP} XP)`;
+          document.getElementById("level-up-note-text").textContent = q.note;
+          document.getElementById("level-up-box").style.display = "block";
+          document.getElementById("continue-btn").style.display = "block";
+
+          earnedXP += awardedXP;
+          document.getElementById("hud-xp-score").textContent = `XP: ${earnedXP} / ${TOTAL_POSSIBLE_XP}`;
+
+          playTone(587.33, 'triangle', 0.15, 0.0, 0.2);
+          playTone(880.00, 'triangle', 0.40, 0.1, 0.2);
+          fireConfetti();
+        }, 400);
+      } else {
+        mistakesThisQuestion++;
+        updatePotentialXPDisplay();
+        buttonEl.classList.add("wrong");
+        buttonEl.disabled = true;
+        playTone(196.00, 'sawtooth', 0.20, 0.0, 0.12);
+      }
+    }
+
+    function nextStep() {
+      stepIndex++;
+      if (stepIndex < proofreadData.length) {
+        renderStage();
+      } else {
+        completeQuest();
+      }
+    }
+
+    function completeQuest() {
+      bgmAudio.pause();
+      bgmAudio.currentTime = 0;
+      stopSynthBGM();
+
+      questCompleteAudio.currentTime = 0;
+      const playPromise = questCompleteAudio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          playFanfare();
+        });
+      } else {
+        playFanfare();
+      }
+
+      switchScreen("result-panel");
+      document.getElementById("hero-congrats").textContent = `Congratulations, Hero ${hero}!`;
+      document.getElementById("final-xp-slot").textContent = `${earnedXP} / ${TOTAL_POSSIBLE_XP} XP`;
+
+      const evalEl = document.getElementById("final-evaluation");
+      if (earnedXP === TOTAL_POSSIBLE_XP) {
+        evalEl.textContent = "🏆 Flawless Scribe of Gielinor! Maximum 2000 XP achieved without a single error!";
+        fireConfetti();
+      } else if (earnedXP >= 1500) {
+        evalEl.textContent = "⚔️ Outstanding work! You demonstrated sharp proofreading instincts!";
+      } else if (earnedXP >= 1000) {
+        evalEl.textContent = "🛡️ Well done! You completed the quest, but take your time to avoid point deductions!";
+      } else {
+        evalEl.textContent = "📜 Return to Lumbridge library and practice more to minimize penalties!";
+      }
+    }
+
+    function resetQuest() {
+      stepIndex = 0;
+      earnedXP = 0;
+      mistakesThisQuestion = 0;
+      document.getElementById("player-input").value = "";
+      questCompleteAudio.pause();
+      questCompleteAudio.currentTime = 0;
+      stopSynthBGM();
+      switchScreen("start-panel");
+    }
+
+    /* Confetti Particle Engine */
+    const canvas = document.getElementById("confetti-canvas");
+    const ctx = canvas.getContext("2d");
+    let confettiList = [];
+    let animationId = null;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function fireConfetti() {
+      confettiList = [];
+      const shades = ["#ffff00", "#ff981f", "#00ffff", "#22c55e", "#ef4444", "#ffffff"];
+      for (let i = 0; i < 90; i++) {
+        confettiList.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          w: Math.random() * 8 + 5,
+          h: Math.random() * 8 + 5,
+          color: shades[Math.floor(Math.random() * shades.length)],
+          vx: (Math.random() - 0.5) * 16,
+          vy: (Math.random() - 0.7) * 16,
+          rotation: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 12,
+          alpha: 1
+        });
+      }
+      if (!animationId) animateParticles();
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = 0;
+
+      confettiList.forEach(c => {
+        c.x += c.vx;
+        c.y += c.vy;
+        c.vy += 0.35;
+        c.rotation += c.rotSpeed;
+        c.alpha -= 0.012;
+
+        if (c.alpha > 0) {
+          alive++;
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate((c.rotation * Math.PI) / 180);
+          ctx.globalAlpha = c.alpha;
+          ctx.fillStyle = c.color;
+          ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+          ctx.restore();
+        }
+      });
+
+      if (alive > 0) {
+        animationId = requestAnimationFrame(animateParticles);
+      } else {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  </script>
+</body>
+</html>
